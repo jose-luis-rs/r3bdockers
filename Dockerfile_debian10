@@ -1,0 +1,78 @@
+# --- Layer 1: Imagen
+FROM debian:10
+
+# --- Layer 2: Variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NThreads=6
+ENV FAIRSOFT_VER=jan24p1
+
+RUN sed -i 's|http://deb.debian.org|http://archive.debian.org|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.debian.org|http://archive.debian.org|g' /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid
+
+# --- Layer 3: Dependencies
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get install -y --no-install-recommends \
+        software-properties-common \
+        wget curl git gnupg ca-certificates \
+        build-essential \
+        autoconf automake binutils \
+        bison bzip2 coreutils debianutils file findutils flex \
+        g++ gcc gfortran gzip hostname make patch \
+        python3 python3-pip python3-dev \
+        sed subversion tar unzip xutils-dev xz-utils \
+        pkg-config \
+        clang clang-tidy clang-format \
+        cmake ninja-build \
+        libbz2-dev libcurl4-openssl-dev libgsl-dev libicu-dev \
+        libfftw3-dev libprotobuf-dev protobuf-compiler-grpc \
+        libgl1-mesa-dev libglu1-mesa-dev libgrpc++-dev \
+        liblzma-dev libncurses-dev libreadline-dev libsqlite3-dev \
+        libssl-dev libtool libx11-dev libxerces-c-dev \
+        libxext-dev libxft-dev libxml2-dev libxmu-dev libxpm-dev \
+        libyaml-cpp-dev libzstd-dev \
+        libfuse-dev libfuse3-dev libcap-dev uuid-dev cpio \
+        libgtest-dev libgmock-dev \
+        valgrind ccache lsb-release mmdb-bin libmaxminddb0 libmaxminddb-dev \
+        fuse && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# --- Configuration
+RUN python3 -m pip config set global.break-system-packages true && \
+    python3 -m pip install -U setuptools
+
+# --- Layer 4: CMake 4.0.3
+RUN mkdir -p /opt && cd /opt && \
+    wget https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3.tar.gz && \
+    tar -xzf cmake-4.0.3.tar.gz && cd cmake-4.0.3 && \
+    ./bootstrap && make -j$(nproc) && make install && \
+    cd / && rm -rf /opt/cmake-4.0.3*
+
+# --- Layer 5: Checks
+RUN cmake --version
+
+# --- CVMFS
+RUN mkdir -p /misc && cd /misc && \
+    git clone --depth 1 --branch devel https://github.com/cvmfs/cvmfs.git && \
+    cd cvmfs && mkdir build && cd build && \
+    cmake -GNinja .. && \
+    ninja -j$(nproc) && \
+    ninja install && \
+    cd /misc && rm -rf cvmfs
+
+# --- FairSoft
+RUN cd /misc && \
+    git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
+    ./FairSoft/legacy/setup-debian.sh && \
+    apt-get remove -y cmake && \
+    ./FairSoft/bootstrap-cmake.sh /usr && \
+    rm -rf FairSoft
+
+# --- Configuration
+CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "true"]
+
+# --- Layer 6: Container
+LABEL org.opencontainers.image.title="cvmfs_clang"
+LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
