@@ -10,3 +10,7 @@ podman run -it --rm --entrypoint sh docker.io/r3bdockers/ubuntu2504:latest
 
 docker rmi -f <id_image>
 
+podman login docker.io
+
+podman push docker.io/r3bdockers/ubuntu2404_base:latest
+
