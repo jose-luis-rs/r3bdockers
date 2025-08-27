@@ -1,0 +1,88 @@
+# Imagen Ubuntu 24.04
+FROM ubuntu:24.04
+
+# --- Layer 2: Variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NThreads=4
+ENV FAIRSOFT_VER=jan24p5
+ENV FAIRROOT_VER=v18.8.2
+ENV FAIRSOFTPATH="/opt/FairSoft"
+ENV FAIRROOTPATH="/opt/FairRoot"
+
+# --- Layer 3: Dependencies
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake ninja-build \
+        gfortran \
+        git wget curl ca-certificates gnupg \
+        python3 python3-pip python3-dev \
+        pkg-config \
+        autoconf automake libtool \
+        bison flex \
+        clang clang-tidy clang-format \
+        libgsl-dev libfftw3-dev \
+        libprotobuf-dev protobuf-compiler-grpc libgrpc++-dev \
+        libgl1-mesa-dev libglu1-mesa-dev \
+        libx11-dev libxext-dev libxft-dev libxmu-dev libxpm-dev libxerces-c-dev libxml2-dev \
+        libreadline-dev libncurses-dev libbz2-dev liblzma-dev libzstd-dev libssl-dev \
+        libyaml-cpp-dev \
+        libfuse-dev libfuse3-dev libcap-dev uuid-dev cpio \
+        valgrind ccache rsync subversion unzip xz-utils tar \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# --- Configuration
+RUN python3 -m pip config set global.break-system-packages true && \
+    pip install -U setuptools
+
+# --- Conan
+RUN python3 -m pip install conan
+
+# --- FairSoft
+RUN mkdir -p /misc && cd /misc && \
+    git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
+    ./FairSoft/legacy/setup-ubuntu.sh && \
+    apt-get remove -y cmake && \
+    ./FairSoft/bootstrap-cmake.sh /usr && \
+    cd FairSoft && git status && \
+    mkdir -p $FAIRSOFTPATH && \
+    mkdir -p build && \
+    cmake -S ./ -B ./build -DCMAKE_INSTALL_PREFIX=$FAIRSOFTPATH -C ./FairSoftConfig.cmake && \
+    cmake --build ./build -j${NThreads}
+    cd .. && rm -rf FairSoft
+    
+# --- FairRoot
+RUN cd /misc && \
+    git clone --depth 1 --branch ${FAIRROOT_VER} https://github.com/FairRootGroup/FairRoot.git FairRoot && \
+    cd FairRoot && git status && \
+    mkdir -p $FAIRROOTPATH && \
+    mkdir -p build && \
+    export SIMPATH=$FAIRSOFTPATH
+    cmake -S ./ -B ./build -DCMAKE_INSTALL_PREFIX=$FAIRROOTPATH && \
+    cd build && make -j${NThreads} && make install && \
+    cd ../.. && rm -rf FairRoot
+ 
+# --- UCESB
+RUN cd /opt && \   
+    . $FAIRSOFTPATH/bin/thisroot.sh && \
+    git clone https://git.chalmers.se/expsubphys/ucesb.git && \
+    cd ucesb && make empty/empty -j${NThreads}
+
+# --- CMake 4.0.3
+RUN mkdir -p /opt && cd /opt && \
+    wget https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3.tar.gz && \
+    tar -xzf cmake-4.0.3.tar.gz && cd cmake-4.0.3 && \
+    ./bootstrap && make -j${NThreads} && make install && \
+    cd / && rm -rf /opt/cmake-4.0.3*
+
+# --- Layer 5: Checks
+RUN cmake --version
+
+# --- Configuration
+CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "true"]
+
+# --- Layer 6: Container
+LABEL org.opencontainers.image.title="jan24p5_v18.8.2"
+LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
+

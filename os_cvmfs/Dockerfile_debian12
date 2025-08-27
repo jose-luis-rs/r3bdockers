@@ -1,5 +1,5 @@
-# Imagen Ubuntu 25.04
-FROM ubuntu:25.04
+# --- Layer 1: Imagen base
+FROM debian:12
 
 # --- Layer 2: Variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,22 +14,11 @@ RUN apt-get update && \
         wget curl git gnupg ca-certificates \
         build-essential \
         autoconf automake binutils \
-        bison bzip2 coreutils file findutils flex \
+        bison bzip2 coreutils debianutils file findutils flex \
         g++ gcc gfortran gzip hostname make patch \
         python3 python3-pip python3-dev \
         sed subversion tar unzip xutils-dev xz-utils \
         pkg-config \
-        autoconf automake binutils \
-        bison bzip2 coreutils \
-        debianutils file findutils flex g++ gcc gfortran gzip \
-        hostname libbz2-dev libcurl4-openssl-dev libgsl-dev libicu-dev \
-        libfftw3-dev libprotobuf-dev \
-        libgl1-mesa-dev libglu1-mesa-dev libgrpc++-dev \
-        liblzma-dev libncurses-dev libreadline-dev libsqlite3-dev libssl-dev libtool \
-        libx11-dev libxerces-c-dev libxext-dev libxft-dev \
-        libxml2-dev libxmu-dev libxpm-dev libyaml-cpp-dev libzstd-dev \
-        lsb-release make patch \
-        protobuf-compiler-grpc rsync sed subversion tar unzip xutils-dev xz-utils \
         clang clang-tidy clang-format \
         cmake ninja-build \
         libbz2-dev libcurl4-openssl-dev libgsl-dev libicu-dev \
@@ -50,32 +39,31 @@ RUN apt-get update && \
 RUN python3 -m pip config set global.break-system-packages true && \
     pip install -U setuptools
 
-# --- Layer 4: CMake 3.30.0
-RUN mkdir -p /opt && cd /opt && \
-    wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0.tar.gz && \
-    tar -xzf cmake-3.30.0.tar.gz && cd cmake-3.30.0 && \
-    ./bootstrap && make -j$(nproc) && make install && \
-    cd / && rm -rf /opt/cmake-3.30.0*
-
-# --- Layer 5: Checks
-RUN cmake --version
 
 # --- CVMFS
 RUN mkdir -p /misc && cd /misc && \
     git clone --depth 1 --branch devel https://github.com/cvmfs/cvmfs.git && \
     cd cvmfs && mkdir build && cd build && \
     cmake -GNinja .. && \
-    ninja -j$(nproc) && \
+    ninja -j${NThreads} && \
     ninja install && \
     cd /misc && rm -rf cvmfs
 
 # --- FairSoft
 RUN cd /misc && \
     git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
-    ./FairSoft/legacy/setup-ubuntu.sh && \
-    apt-get remove -y cmake && \
-    ./FairSoft/bootstrap-cmake.sh /usr && \
+    ./FairSoft/legacy/setup-debian.sh && \
     rm -rf FairSoft
+    
+# --- CMake 4.0.3
+RUN mkdir -p /opt && cd /opt && \
+    wget https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3.tar.gz && \
+    tar -xzf cmake-4.0.3.tar.gz && cd cmake-4.0.3 && \
+    ./bootstrap && make -j${NThreads} && make install && \
+    cd / && rm -rf /opt/cmake-4.0.3*
+    
+# --- Layer 5: Checks
+RUN cmake --version
 
 # --- Configuration
 CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "true"]
@@ -83,4 +71,3 @@ CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "t
 # --- Layer 6: Container
 LABEL org.opencontainers.image.title="cvmfs_clang"
 LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
-

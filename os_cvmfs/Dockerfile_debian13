@@ -39,13 +39,6 @@ RUN apt-get update && \
 RUN python3 -m pip config set global.break-system-packages true && \
     pip install -U setuptools
 
-# --- Layer 4: CMake 4.0.3
-RUN mkdir -p /opt && cd /opt && \
-    wget https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3.tar.gz && \
-    tar -xzf cmake-4.0.3.tar.gz && cd cmake-4.0.3 && \
-    ./bootstrap && make -j$(nproc) && make install && \
-    cd / && rm -rf /opt/cmake-4.0.3*
-
 # --- Layer 5: Checks
 RUN cmake --version
 
@@ -54,7 +47,7 @@ RUN mkdir -p /misc && cd /misc && \
     git clone --depth 1 --branch devel https://github.com/cvmfs/cvmfs.git && \
     cd cvmfs && mkdir build && cd build && \
     cmake -GNinja .. && \
-    ninja -j$(nproc) && \
+    ninja -j${NThreads} && \
     ninja install && \
     cd /misc && rm -rf cvmfs
 
@@ -62,8 +55,6 @@ RUN mkdir -p /misc && cd /misc && \
 RUN cd /misc && \
     git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
     ./FairSoft/legacy/setup-debian.sh && \
-    apt-get remove -y cmake && \
-    ./FairSoft/bootstrap-cmake.sh /usr && \
     rm -rf FairSoft
 
 # --- Configuration
