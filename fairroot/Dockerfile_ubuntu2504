@@ -13,6 +13,8 @@ ENV FAIRROOTPATH="/opt/FairRoot"
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
+        -o Dpkg::Use-Pty=0 \
+        -o APT::Sandbox::User=root \
         build-essential \
         cmake ninja-build \
         gfortran \
