@@ -1,5 +1,5 @@
 # --- Imagen base
-FROM debian:12
+FROM debian:13
 
 # --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -13,7 +13,6 @@ ENV FAIRROOTPATH="/opt/FairRoot"
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
-        software-properties-common \
         wget curl git gnupg ca-certificates \
         build-essential \
         autoconf automake binutils \
@@ -38,39 +37,28 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+
 # --- Configuration
 RUN python3 -m pip config set global.break-system-packages true && \
     pip install -U setuptools
 
-
-# --- CVMFS
-RUN mkdir -p /misc && cd /misc && \
-    git clone --depth 1 --branch devel https://github.com/cvmfs/cvmfs.git && \
-    cd cvmfs && mkdir build && cd build && \
-    cmake -GNinja .. && \
-    ninja -j${NThreads} && \
-    ninja install && \
-    cd /misc && rm -rf cvmfs
+# --- Conan
+RUN python3 -m pip install conan
 
 # --- FairSoft
-RUN cd /misc && \
+RUN mkdir -p /misc && cd /misc && \
     git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
     ./FairSoft/legacy/setup-debian.sh && \
+    apt-get remove -y cmake && \
+    ./FairSoft/bootstrap-cmake.sh /usr && \
     rm -rf FairSoft
-    
-# --- CMake 4.0.3
-RUN mkdir -p /opt && cd /opt && \
-    wget https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3.tar.gz && \
-    tar -xzf cmake-4.0.3.tar.gz && cd cmake-4.0.3 && \
-    ./bootstrap && make -j${NThreads} && make install && \
-    cd / && rm -rf /opt/cmake-4.0.3*
-    
+
 # --- Layer 5: Checks
 RUN cmake --version
 
 # --- Configuration
 CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "true"]
 
-# --- Layer 6: Container
-LABEL org.opencontainers.image.title="cvmfs_clang"
+# --- Layer 6: Containers
+LABEL org.opencontainers.image.title="jan24p5_base"
 LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"

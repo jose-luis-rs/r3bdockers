@@ -12,5 +12,7 @@ docker rmi -f <id_image>
 
 podman login docker.io
 
+podman tag localhost/debian13_base:latest docker.io/r3bdockers/debian13_base:latest
+
 podman push docker.io/r3bdockers/ubuntu2404_base:latest
 

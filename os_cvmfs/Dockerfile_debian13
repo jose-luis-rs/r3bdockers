@@ -1,16 +1,15 @@
-# --- Layer 1: Imagen base
-FROM debian:trixie
+# --- Imagen base
+FROM debian:13
 
-# --- Layer 2: Variables
+# --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NThreads=6
+ENV NThreads=4
 ENV FAIRSOFT_VER=jan24p5
 
-# --- Layer 3: Dependencies
+# --- Dependencies
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
-        software-properties-common \
         wget curl git gnupg ca-certificates \
         build-essential \
         autoconf automake binutils \
@@ -34,6 +33,7 @@ RUN apt-get update && \
         fuse && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
 
 # --- Configuration
 RUN python3 -m pip config set global.break-system-packages true && \
