@@ -1,23 +1,26 @@
 # Imagen Ubuntu 25.04
 FROM docker.io/r3bdockers/ubuntu2504_base:latest
 
-# --- Layer 2: Variables
+# --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NThreads=4
-ENV FAIRSOFT_VER=jan24p5
+ENV NThreads=5
+ENV FAIRSOFT_VER=jan24p5-r3b
 ENV FAIRROOT_VER=v18.8.2
 ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
 
 # --- FairSoft
 RUN mkdir -p /misc && cd /misc && \
-    git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
+    git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/R3BRootGroup/FairSoft.git FairSoft && \
     cd FairSoft && \
     mkdir -p $FAIRSOFTPATH && \
     mkdir -p build && \
     cmake -S ./ -B ./build -DCMAKE_INSTALL_PREFIX=$FAIRSOFTPATH -C ./FairSoftConfig.cmake && \
-    cmake --build ./build -j${NThreads}
-    cd .. && rm -rf FairSoft
+    cmake --build ./build -j${NThreads} && \
+    cd .. && rm -rf FairSoft && \
+    echo "======================" && \
+    echo "FairSoft build layer DONE" && \
+    echo "======================"
     
 # --- FairRoot
 RUN cd /misc && \
@@ -25,16 +28,22 @@ RUN cd /misc && \
     cd FairRoot && git status && \
     mkdir -p $FAIRROOTPATH && \
     mkdir -p build && \
-    export SIMPATH=$FAIRSOFTPATH
+    export SIMPATH=$FAIRSOFTPATH && \
     cmake -S ./ -B ./build -DCMAKE_INSTALL_PREFIX=$FAIRROOTPATH && \
     cd build && make -j${NThreads} && make install && \
-    cd ../.. && rm -rf FairRoot
+    cd ../.. && rm -rf FairRoot && \
+    export FAIRROOTPATH=$FAIRROOTPATH && \
+    echo "======================" && \
+    echo "FairRoot build layer DONE" && \
+    echo "======================"
  
 # --- UCESB
-RUN cd /opt && \   
-    . $FAIRSOFTPATH/bin/thisroot.sh && \
+RUN cd $FAIRSOFTPATH && \
+    . bin/thisroot.sh && \
+    cd /opt && \
     git clone https://git.chalmers.se/expsubphys/ucesb.git && \
-    cd ucesb && make empty/empty -j${NThreads}
+    cd ucesb && \
+    make empty/empty -j${NThreads}
 
 # --- CMake 4.0.3
 RUN mkdir -p /opt && cd /opt && \
@@ -43,13 +52,10 @@ RUN mkdir -p /opt && cd /opt && \
     ./bootstrap && make -j${NThreads} && make install && \
     cd / && rm -rf /opt/cmake-4.0.3*
 
-# --- Layer 5: Checks
+# --- Checks
 RUN cmake --version
 
-# --- Configuration
-CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "true"]
-
-# --- Layer 6: Container
+# --- Container
 LABEL org.opencontainers.image.title="jan24p5_v18.8.2"
 LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
 

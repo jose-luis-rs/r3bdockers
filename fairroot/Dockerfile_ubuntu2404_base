@@ -1,7 +1,7 @@
 # Imagen Ubuntu 24.04
 FROM ubuntu:24.04
 
-# --- Layer 2: Variables
+# --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NThreads=4
 ENV FAIRSOFT_VER=jan24p5
@@ -9,29 +9,43 @@ ENV FAIRROOT_VER=v18.8.2
 ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
 
-# --- Layer 3: Dependencies
+# --- Dependencies
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
-        -o Dpkg::Use-Pty=0 \
-        -o APT::Sandbox::User=root \
+        software-properties-common \
+        wget curl git gnupg ca-certificates \
         build-essential \
-        cmake ninja-build \
-        gfortran \
-        git wget curl ca-certificates gnupg \
+        autoconf automake binutils \
+        bison bzip2 coreutils file findutils flex \
+        g++ gcc gfortran gzip hostname make patch \
         python3 python3-pip python3-dev \
+        sed subversion tar unzip xutils-dev xz-utils \
         pkg-config \
-        autoconf automake libtool \
-        bison flex \
+        autoconf automake binutils \
+        bison bzip2 coreutils \
+        debianutils file findutils flex g++ gcc gfortran gzip \
+        hostname libbz2-dev libcurl4-openssl-dev libgsl-dev libicu-dev \
+        libfftw3-dev libprotobuf-dev \
+        libgl1-mesa-dev libglu1-mesa-dev libgrpc++-dev \
+        liblzma-dev libncurses-dev libreadline-dev libsqlite3-dev libssl-dev libtool \
+        libx11-dev libxerces-c-dev libxext-dev libxft-dev \
+        libxml2-dev libxmu-dev libxpm-dev libyaml-cpp-dev libzstd-dev \
+        lsb-release make patch \
+        protobuf-compiler-grpc rsync sed subversion tar unzip xutils-dev xz-utils \
         clang clang-tidy clang-format \
-        libgsl-dev libfftw3-dev \
-        libprotobuf-dev protobuf-compiler-grpc libgrpc++-dev \
-        libgl1-mesa-dev libglu1-mesa-dev \
-        libx11-dev libxext-dev libxft-dev libxmu-dev libxpm-dev libxerces-c-dev libxml2-dev \
-        libreadline-dev libncurses-dev libbz2-dev liblzma-dev libzstd-dev libssl-dev \
-        libyaml-cpp-dev \
+        cmake ninja-build \
+        libbz2-dev libcurl4-openssl-dev libgsl-dev libicu-dev \
+        libfftw3-dev libprotobuf-dev protobuf-compiler-grpc \
+        libgl1-mesa-dev libglu1-mesa-dev libgrpc++-dev \
+        liblzma-dev libncurses-dev libreadline-dev libsqlite3-dev \
+        libssl-dev libtool libx11-dev libxerces-c-dev \
+        libxext-dev libxft-dev libxml2-dev libxmu-dev libxpm-dev \
+        libyaml-cpp-dev libzstd-dev \
         libfuse-dev libfuse3-dev libcap-dev uuid-dev cpio \
-        valgrind ccache rsync subversion unzip xz-utils tar \
+        libgtest-dev libgmock-dev \
+        valgrind ccache lsb-release mmdb-bin libmaxminddb0 libmaxminddb-dev \
+        fuse && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # --- Configuration
@@ -49,13 +63,13 @@ RUN mkdir -p /misc && cd /misc && \
     ./FairSoft/bootstrap-cmake.sh /usr && \
     rm -rf FairSoft
 
-# --- Layer 5: Checks
+# --- Checks
 RUN cmake --version
 
 # --- Configuration
 CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "true"]
 
-# --- Layer 6: Container
+# --- Container
 LABEL org.opencontainers.image.title="jan24p5_base"
 LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
 

@@ -8,8 +8,11 @@ RUN mkdir -p /misc && cd /misc && \
     mkdir -p $FAIRSOFTPATH && \
     mkdir -p build && \
     cmake -S ./ -B ./build -DCMAKE_INSTALL_PREFIX=$FAIRSOFTPATH -C ./FairSoftConfig.cmake && \
-    cmake --build ./build -j${NThreads}
-    cd .. && rm -rf FairSoft
+    cmake --build ./build -j${NThreads} && \
+    cd .. && rm -rf FairSoft && \
+    echo "======================" && \
+    echo "FairSoft build layer DONE" && \
+    echo "======================"
     
 # --- FairRoot
 RUN cd /misc && \
@@ -17,16 +20,22 @@ RUN cd /misc && \
     cd FairRoot && git status && \
     mkdir -p $FAIRROOTPATH && \
     mkdir -p build && \
-    export SIMPATH=$FAIRSOFTPATH
+    export SIMPATH=$FAIRSOFTPATH && \
     cmake -S ./ -B ./build -DCMAKE_INSTALL_PREFIX=$FAIRROOTPATH && \
     cd build && make -j${NThreads} && make install && \
-    cd ../.. && rm -rf FairRoot
+    cd ../.. && rm -rf FairRoot && \
+    export FAIRROOTPATH=$FAIRROOTPATH && \
+    echo "======================" && \
+    echo "FairRoot build layer DONE" && \
+    echo "======================"
  
 # --- UCESB
-RUN cd /opt && \   
-    . $FAIRSOFTPATH/bin/thisroot.sh && \
+RUN cd $FAIRSOFTPATH && \
+    . bin/thisroot.sh && \
+    cd /opt && \
     git clone https://git.chalmers.se/expsubphys/ucesb.git && \
-    cd ucesb && make empty/empty -j${NThreads}
+    cd ucesb && \
+    make empty/empty -j${NThreads}
 
 # --- CMake 4.0.3
 RUN mkdir -p /opt && cd /opt && \
@@ -38,10 +47,7 @@ RUN mkdir -p /opt && cd /opt && \
 # --- Layer 5: Checks
 RUN cmake --version
 
-# --- Configuration
-CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "true"]
-
-# --- Layer 6: Container
+# --- Container
 LABEL org.opencontainers.image.title="jan24p5_v18.8.2"
 LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
 

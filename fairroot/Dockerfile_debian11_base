@@ -1,8 +1,9 @@
-# Imagen Ubuntu 25.04
-FROM ubuntu:25.04
+# --- Imagen base
+FROM debian:11
 
-# --- Layer 2: Variables
+# --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
+ENV NThreads=4
 ENV FAIRSOFT_VER=jan24p5
 ENV FAIRROOT_VER=v18.8.2
 ENV FAIRSOFTPATH="/opt/FairSoft"
@@ -12,26 +13,14 @@ ENV FAIRROOTPATH="/opt/FairRoot"
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
-        software-properties-common \
         wget curl git gnupg ca-certificates \
         build-essential \
         autoconf automake binutils \
-        bison bzip2 coreutils file findutils flex \
+        bison bzip2 coreutils debianutils file findutils flex \
         g++ gcc gfortran gzip hostname make patch \
         python3 python3-pip python3-dev \
         sed subversion tar unzip xutils-dev xz-utils \
         pkg-config \
-        autoconf automake binutils \
-        bison bzip2 coreutils \
-        debianutils file findutils flex g++ gcc gfortran gzip \
-        hostname libbz2-dev libcurl4-openssl-dev libgsl-dev libicu-dev \
-        libfftw3-dev libprotobuf-dev \
-        libgl1-mesa-dev libglu1-mesa-dev libgrpc++-dev \
-        liblzma-dev libncurses-dev libreadline-dev libsqlite3-dev libssl-dev libtool \
-        libx11-dev libxerces-c-dev libxext-dev libxft-dev \
-        libxml2-dev libxmu-dev libxpm-dev libyaml-cpp-dev libzstd-dev \
-        lsb-release make patch \
-        protobuf-compiler-grpc rsync sed subversion tar unzip xutils-dev xz-utils \
         clang clang-tidy clang-format \
         cmake ninja-build \
         libbz2-dev libcurl4-openssl-dev libgsl-dev libicu-dev \
@@ -45,19 +34,21 @@ RUN apt-get update && \
         libgtest-dev libgmock-dev \
         valgrind ccache lsb-release mmdb-bin libmaxminddb0 libmaxminddb-dev \
         fuse && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 
 # --- Configuration
 RUN python3 -m pip config set global.break-system-packages true && \
     pip install -U setuptools
 
 # --- Conan
-RUN python3 -m pip install --upgrade --ignore-installed conan
+RUN python3 -m pip install conan
 
 # --- FairSoft
 RUN mkdir -p /misc && cd /misc && \
     git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
-    ./FairSoft/legacy/setup-ubuntu.sh && \
+    ./FairSoft/legacy/setup-debian.sh && \
     apt-get remove -y cmake && \
     ./FairSoft/bootstrap-cmake.sh /usr && \
     rm -rf FairSoft
@@ -68,7 +59,6 @@ RUN cmake --version
 # --- Configuration
 CMD ["python3", "-m", "pip", "config", "set", "global.break-system-packages", "true"]
 
-# --- Layer 6: Container
+# --- Layer 6: Containers
 LABEL org.opencontainers.image.title="jan24p5_base"
 LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
-
