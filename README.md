@@ -1,4 +1,29 @@
-# R3BDockers for R3B
+# R3BDockers for compiling R3B software [![license](https://img.shields.io/badge/License-GPLv3-blue.svg)](COPYRIGHT) 
+
+## Discussion Forum
+
+For the software-related user support you can post a new topic on our [forum](https://forum.gsi.de/index.php?t=index&cat=40&).
+
+## License
+
+R3BDockers is distributed under the terms of the GNU General Public Licence version 3 ([GPLv3](https://github.com/jose-luis-rs/r3bdockers/blob/main/LICENSE)).
+
+## Code of Conduct
+
+We are committed to fostering a welcoming and inclusive environment in the R3BDockers project. Please take a moment to review our [Code of Conduct](./CODE_OF_CONDUCT.md), which outlines our expectations for all contributors and community members.
+
+## Release Information
+
+Please visit [releases](https://github.com/jose-luis-rs/r3bdockers/releases)
+
+## Download
+
+~~~bash
+git clone https://github.com/jose-luis-rs/r3bdockers.git
+cd r3bdockers
+~~~
+
+## Few commands to run the scripts
 
 docker images
 
