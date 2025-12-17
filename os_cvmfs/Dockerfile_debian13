@@ -4,7 +4,7 @@ FROM debian:13
 # --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NThreads=4
-ENV FAIRSOFT_VER=jan24p5
+ENV FAIRSOFT_VER=jan24p6
 
 # --- Dependencies
 RUN apt-get update && \
