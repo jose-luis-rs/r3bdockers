@@ -3,7 +3,7 @@ FROM almalinux:10.1
 
 # --- Layer 2: Variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV FAIRSOFT_VER=jan24p6
+ENV FAIRSOFT_VER=jan24p5
 ENV FAIRROOT_VER=v18.8.2
 ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
