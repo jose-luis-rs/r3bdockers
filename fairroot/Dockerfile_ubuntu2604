@@ -1,0 +1,60 @@
+# Imagen Ubuntu 26.04
+FROM docker.io/r3bdockers/ubuntu2604_base:latest
+
+# --- Variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NThreads=4
+ENV FAIRSOFT_VER=jan24p6
+ENV FAIRROOT_VER=v19.0.1
+ENV FAIRSOFTPATH="/opt/FairSoft"
+ENV FAIRROOTPATH="/opt/FairRoot"
+
+# --- FairSoft
+RUN mkdir -p /misc && cd /misc && \
+    git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
+    cd FairSoft && \
+    mkdir -p $FAIRSOFTPATH && \
+    mkdir -p build && \
+    cmake -S ./ -B ./build -DCMAKE_INSTALL_PREFIX=$FAIRSOFTPATH -C ./FairSoftConfig.cmake && \
+    cmake --build ./build -j${NThreads} && \
+    cd .. && rm -rf FairSoft && \
+    echo "======================" && \
+    echo "FairSoft build layer DONE" && \
+    echo "======================"
+    
+# --- FairRoot
+RUN cd /misc && \
+    git clone --depth 1 --branch ${FAIRROOT_VER} https://github.com/FairRootGroup/FairRoot.git FairRoot && \
+    cd FairRoot && git status && \
+    mkdir -p $FAIRROOTPATH && \
+    mkdir -p build && \
+    export SIMPATH=$FAIRSOFTPATH && \
+    cmake -S ./ -B ./build -DCMAKE_INSTALL_PREFIX=$FAIRROOTPATH && \
+    cd build && make -j${NThreads} && make install && \
+    cd ../.. && rm -rf FairRoot && \
+    export FAIRROOTPATH=$FAIRROOTPATH && \
+    echo "======================" && \
+    echo "FairRoot build layer DONE" && \
+    echo "======================"
+ 
+# --- UCESB
+RUN cd $FAIRSOFTPATH && \
+    . bin/thisroot.sh && \
+    cd /opt && \
+    git clone https://git.chalmers.se/expsubphys/ucesb.git && \
+    cd ucesb && \
+    make empty/empty -j${NThreads}
+
+ --- CMake 4.3.1
+RUN mkdir -p /opt && cd /opt && \
+    wget https://github.com/Kitware/CMake/releases/download/v4.3.1/cmake-4.3.1.tar.gz && \
+    tar -xzf cmake-4.3.1.tar.gz && cd cmake-4.3.1 && \
+    ./bootstrap && make -j${NThreads} && make install && \
+    cd / && rm -rf /opt/cmake-4.3.1*
+
+# --- Checks
+RUN cmake --version
+
+# --- Container
+LABEL org.opencontainers.image.title="jan24p6_v19.0.1"
+LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
