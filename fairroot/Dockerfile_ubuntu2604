@@ -10,7 +10,7 @@ ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
 
 # --- FairSoft
-RUN mkdir -p /misc && cd /misc && \
+RUN mkdir -p /misc && cd /misc && apt-get install libcrypt-dev && \
     git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
     cd FairSoft && \
     mkdir -p $FAIRSOFTPATH && \
@@ -45,12 +45,12 @@ RUN cd $FAIRSOFTPATH && \
     cd ucesb && \
     make empty/empty -j${NThreads}
 
- --- CMake 4.3.1
+# --- CMake 4.0.3
 RUN mkdir -p /opt && cd /opt && \
-    wget https://github.com/Kitware/CMake/releases/download/v4.3.1/cmake-4.3.1.tar.gz && \
-    tar -xzf cmake-4.3.1.tar.gz && cd cmake-4.3.1 && \
+    wget https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3.tar.gz && \
+    tar -xzf cmake-4.0.3.tar.gz && cd cmake-4.0.3 && \
     ./bootstrap && make -j${NThreads} && make install && \
-    cd / && rm -rf /opt/cmake-4.3.1*
+    cd / && rm -rf /opt/cmake-4.0.3*
 
 # --- Checks
 RUN cmake --version
