@@ -3,14 +3,15 @@ FROM docker.io/r3bdockers/ubuntu2504_base:latest
 
 # --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NThreads=5
-ENV FAIRSOFT_VER=jan24p5-r3b
-ENV FAIRROOT_VER=v18.8.2
+ENV NThreads=6
+ENV FAIRSOFT_VER=feb26p1_r3b
+ENV FAIRROOT_VER=v18.8.3
 ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
 
 # --- FairSoft
-RUN mkdir -p /misc && cd /misc && \
+RUN mkdir -p /misc && cd /misc && apt-get update && apt-get install -y --no-install-recommends libcrypt-dev && \
+    rm -rf /var/lib/apt/lists/* && \
     git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/R3BRootGroup/FairSoft.git FairSoft && \
     cd FairSoft && \
     mkdir -p $FAIRSOFTPATH && \
@@ -56,6 +57,6 @@ RUN mkdir -p /opt && cd /opt && \
 RUN cmake --version
 
 # --- Container
-LABEL org.opencontainers.image.title="jan24p5_v18.8.2"
+LABEL org.opencontainers.image.title="feb26p1_v18.8.3"
 LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
 
