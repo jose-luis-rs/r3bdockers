@@ -10,7 +10,7 @@ ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
 
 # --- FairSoft
-RUN mkdir -p /misc && cd /misc && apt-get update && apt-get install -y --no-install-recommends libcrypt-dev && \
+RUN mkdir -p /misc && cd /misc && apt-get update && apt-get install -y --no-install-recommends libcrypt-dev && apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* && \
     git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/FairRootGroup/FairSoft.git FairSoft && \
     cd FairSoft && \
