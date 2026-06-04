@@ -4,7 +4,7 @@ FROM docker.io/r3bdockers/debian13_base:latest
 # --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NThreads=10
-ENV FAIRSOFT_VER=feb26p1
+ENV FAIRSOFT_VER=feb26p1_r3b
 ENV FAIRROOT_VER=v19.0.1
 ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
@@ -25,7 +25,7 @@ RUN mkdir -p /misc && cd /misc && apt-get update && apt-get install -y --no-inst
     
 # --- FairRoot
 RUN cd /misc && \
-    git clone --depth 1 --branch ${FAIRROOT_VER} https://github.com/FairRootGroup/FairRoot.git FairRoot && \
+    git clone --depth 1 --branch ${FAIRROOT_VER} https://github.com/R3BRootGroup/FairRoot.git FairRoot && \
     cd FairRoot && git status && \
     mkdir -p $FAIRROOTPATH && \
     mkdir -p build && \

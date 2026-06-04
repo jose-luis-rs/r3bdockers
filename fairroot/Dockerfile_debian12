@@ -1,16 +1,17 @@
-# Imagen Ubuntu 26.04
-FROM docker.io/r3bdockers/ubuntu2604_base:latest
+# Imagen Debian12
+FROM docker.io/r3bdockers/debian12_base:latest
 
 # --- Variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NThreads=4
-ENV FAIRSOFT_VER=jan24p6_r3b
+ENV NThreads=10
+ENV FAIRSOFT_VER=feb26p1_r3b
 ENV FAIRROOT_VER=v19.0.1
 ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
 
 # --- FairSoft
-RUN mkdir -p /misc && cd /misc && apt-get install libcrypt-dev && \
+RUN mkdir -p /misc && cd /misc && apt-get update && apt-get install -y --no-install-recommends libcrypt-dev && \
+    rm -rf /var/lib/apt/lists/* && \
     git clone --depth 1 --branch ${FAIRSOFT_VER} https://github.com/R3BRootGroup/FairSoft.git FairSoft && \
     cd FairSoft && \
     mkdir -p $FAIRSOFTPATH && \
@@ -36,18 +37,17 @@ RUN cd /misc && \
     echo "======================" && \
     echo "FairRoot build layer DONE" && \
     echo "======================"
- 
-# --- UCESB
-RUN cd $FAIRSOFTPATH && \
-    . bin/thisroot.sh && \
-    cd /opt && \
-    git clone https://git.chalmers.se/expsubphys/ucesb.git && \
-    cd ucesb && \
-    make empty/empty -j${NThreads}
+
+# --- CMake 4.0.3
+RUN mkdir -p /opt && cd /opt && \
+    wget https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3.tar.gz && \
+    tar -xzf cmake-4.0.3.tar.gz && cd cmake-4.0.3 && \
+    ./bootstrap && make -j${NThreads} && make install && \
+    cd / && rm -rf /opt/cmake-4.0.3*
 
 # --- Checks
 RUN cmake --version
 
 # --- Container
-LABEL org.opencontainers.image.title="jan24p6_v19.0.1"
+LABEL org.opencontainers.image.title="feb26p1_v19.0.1"
 LABEL org.opencontainers.image.authors="Jose Luis Rodriguez Sanchez <j.l.rodriguez.sanchez@udc.es>"
