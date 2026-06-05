@@ -12,6 +12,7 @@ ENV FAIRROOTPATH="/opt/FairRoot"
 RUN dnf -y update && \
     dnf -y upgrade && \
     dnf -y install epel-release && \
+    dnf -y install expat-devel && \
     dnf install -y --setopt=install_weak_deps=False --allowerasing --skip-broken \
         wget curl git gnupg2 ca-certificates \
         make automake autoconf gcc gcc-c++ gfortran binutils bison bzip2 coreutils \
