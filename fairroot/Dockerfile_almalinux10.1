@@ -10,7 +10,7 @@ ENV FAIRSOFTPATH="/opt/FairSoft"
 ENV FAIRROOTPATH="/opt/FairRoot"
 
 # --- FairSoft
-RUN dnf -y update && dnf -y upgrade && \
+RUN dnf -y update && \
     dnf -y install expat-devel && \
     dnf -y install libxcrypt-devel && dnf autoremove -y && \
     dnf clean all && \
